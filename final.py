@@ -36,9 +36,14 @@ def normalize_turkish(text):
 
 def search(df, name):
     name_normalized = normalize_turkish(name.strip())
-    return df[df.apply(
-        lambda row: normalize_turkish(' '.join(row.astype(str))).__contains__(name_normalized), axis=1
-    )]
+    def search_row(row):
+        try:
+            # NaN değerleri filtreleyip string'e çevir
+            row_str = ' '.join([str(x) for x in row if pd.notna(x)])
+            return name_normalized in normalize_turkish(row_str)
+        except Exception:
+            return False
+    return df[df.apply(search_row, axis=1)]
 
 # Sadece isim girildiğinde arama yap (Enter veya Buton)
 if name and name.strip():

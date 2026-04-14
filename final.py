@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime
 import os
 
 st.set_page_config(page_title="Final Görevlendirme Arama", layout="wide")
@@ -13,7 +12,6 @@ search_button = st.button("🔍 Ara", use_container_width=True)
 
 # Dosya yollarını dinamik olarak belirle
 base_dir = os.path.dirname(os.path.abspath(__file__)) if '__file__' in globals() else '.'
-previous_file = os.path.join(base_dir, "25-26_Bahar_Vize.xlsx")
 current_file = os.path.join(base_dir, "25-26_Bahar_Vize_2.xlsx")
 
 @st.cache_data
@@ -29,11 +27,10 @@ def load_excel(path):
 
 # Excel dosyasını yükle
 try:
-    df_previous = load_excel(previous_file)
     df_current = load_excel(current_file)
 except Exception as e:
-    st.error(f"Veri dosyaları yüklenemedi: {e}")
-    st.info("Lütfen depoda 25-26_Bahar_Vize.xlsx ve 25-26_Bahar_Vize_2.xlsx dosyalarının bulunduğunu kontrol edin.")
+    st.error(f"Veri dosyası yüklenemedi: {e}")
+    st.info("Lütfen depoda 25-26_Bahar_Vize_2.xlsx dosyasının bulunduğunu kontrol edin.")
     st.stop()
 
 def normalize_turkish(text):
@@ -59,81 +56,9 @@ def search(df, name):
             return False
     return df[df.apply(search_row, axis=1)]
 
-def normalize_cell_for_compare(value):
-    if pd.isna(value):
-        return ""
-    if isinstance(value, pd.Timestamp):
-        return value.strftime("%Y-%m-%d %H:%M")
-    return normalize_turkish(str(value).strip())
-
-def get_comparison_columns(df_prev, df_cur):
-    preferred_cols = [
-        "Ders Kodu", "Section", "Tarih", "Date", "Sınav Tarihi", "Exam Date",
-        "Başlangıç Saat", "Başlangıç", "Start Time", "Bitiş Saat", "Bitiş", "End Time",
-        "Sınıf", "Salon", "Derslik", "Room", "Classroom"
-    ]
-
-    gozetmen_prev = [c for c in df_prev.columns if "Gözetmen" in str(c)]
-    gozetmen_cur = [c for c in df_cur.columns if "Gözetmen" in str(c)]
-    preferred_cols.extend(gozetmen_prev)
-    preferred_cols.extend(gozetmen_cur)
-
-    common_cols = [c for c in preferred_cols if c in df_prev.columns and c in df_cur.columns]
-    if common_cols:
-        return list(dict.fromkeys(common_cols))
-
-    fallback_cols = [c for c in df_prev.columns if c in df_cur.columns]
-    return fallback_cols
-
-def build_signature_map(df, compare_cols):
-    signatures = {}
-    for _, row in df.iterrows():
-        parts = []
-        for col in compare_cols:
-            val = normalize_cell_for_compare(row.get(col))
-            if val:
-                parts.append(f"{col}={val}")
-        sig = " | ".join(parts)
-        if sig:
-            signatures[sig] = row
-    return signatures
-
 # Sadece isim girildiğinde arama yap (Enter veya Buton)
 if name and name.strip():
-    result_previous = search(df_previous, name).copy()
     result = search(df_current, name).copy()
-
-    st.write("## 🔄 Eski-Yeni Karşılaştırma")
-
-    compare_cols = get_comparison_columns(result_previous, result)
-    prev_map = build_signature_map(result_previous, compare_cols)
-    cur_map = build_signature_map(result, compare_cols)
-
-    added_keys = sorted(set(cur_map.keys()) - set(prev_map.keys()))
-    removed_keys = sorted(set(prev_map.keys()) - set(cur_map.keys()))
-
-    summary_col1, summary_col2, summary_col3, summary_col4 = st.columns(4)
-    with summary_col1:
-        st.metric("Eski Kayıt", len(result_previous))
-    with summary_col2:
-        st.metric("Güncel Kayıt", len(result))
-    with summary_col3:
-        st.metric("Eklenen", len(added_keys))
-    with summary_col4:
-        st.metric("Çıkarılan", len(removed_keys))
-
-    if added_keys:
-        st.write("### ✅ Güncel Dosyada Eklenen Görevlendirmeler")
-        added_df = pd.DataFrame([cur_map[k] for k in added_keys]).reset_index(drop=True)
-        st.dataframe(added_df, use_container_width=True)
-
-    if removed_keys:
-        st.write("### ❌ Güncel Dosyada Kaldırılan Görevlendirmeler")
-        removed_df = pd.DataFrame([prev_map[k] for k in removed_keys]).reset_index(drop=True)
-        st.dataframe(removed_df, use_container_width=True)
-
-    if not added_keys and not removed_keys:
-        st.success("Eski ve güncel dosyalar arasında bu isim için fark bulunamadı.")
 
     if result.empty:
         st.info("Aranan isimle ilgili güncel dosyada bir final sınavı kaydı bulunamadı.")

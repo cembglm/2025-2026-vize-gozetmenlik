@@ -18,11 +18,23 @@ current_file = os.path.join(base_dir, "25-26_Bahar_Vize_2.xlsx")
 
 @st.cache_data
 def load_excel(path):
-    return pd.read_excel(path, sheet_name="OİS Listesi")
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"Dosya bulunamadı: {os.path.basename(path)}")
+
+    try:
+        return pd.read_excel(path, sheet_name="OİS Listesi")
+    except ValueError:
+        # Beklenen sheet adı yoksa ilk sheet'i kullanarak uygulamanın açılmasını garanti et.
+        return pd.read_excel(path)
 
 # Excel dosyasını yükle
-df_previous = load_excel(previous_file)
-df_current = load_excel(current_file)
+try:
+    df_previous = load_excel(previous_file)
+    df_current = load_excel(current_file)
+except Exception as e:
+    st.error(f"Veri dosyaları yüklenemedi: {e}")
+    st.info("Lütfen depoda 25-26_Bahar_Vize.xlsx ve 25-26_Bahar_Vize_2.xlsx dosyalarının bulunduğunu kontrol edin.")
+    st.stop()
 
 def normalize_turkish(text):
     """Türkçe karakterleri normalize et (İ->i, Ş->s, Ğ->g vb.)"""

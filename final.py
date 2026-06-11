@@ -12,7 +12,7 @@ search_button = st.button("🔍 Ara", use_container_width=True)
 
 # Dosya yollarını dinamik olarak belirle
 base_dir = os.path.dirname(os.path.abspath(__file__)) if '__file__' in globals() else '.'
-current_file = os.path.join(base_dir, "25-26_Bahar_Vize_2.xlsx")
+current_file = os.path.join(base_dir, "25-26-Bahar-Final-OİS.xlsx")
 
 @st.cache_data
 def load_excel(path):

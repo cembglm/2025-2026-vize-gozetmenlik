@@ -2,7 +2,7 @@
 
 Bahar 2025-2026 vize sınavı gözetmenlik görevlendirmelerini kolayca aramak için geliştirilmiş bir **Streamlit** uygulamasıdır.
 
-🔗 **Live Demo:** [Streamlit Cloud](https://2025-2026-vize-gozetmenlik.streamlit.app)
+🔗 **Live Demo:** [Streamlit Cloud](https://2025-2026-final-gozetmenlik.streamlit.app/)
 
 ## 🎯 Özellikler
 
